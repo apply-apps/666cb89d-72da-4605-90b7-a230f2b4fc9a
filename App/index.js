@@ -1,24 +1,33 @@
 // Filename: index.js
-// Combined code from all files
-
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, Button, View, ScrollView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TextInput, Button, View, ScrollView, Picker } from 'react-native';
 import axios from 'axios';
 
 const API_URL = 'http://dev.192.168.1.107.nip.io:3300/chatgpt';
 
+const predefinedRecipients = ["Father", "Mother", "Brother", "Sister", "Friend", "Custom"];
+const predefinedOccasions = ["Birthday", "Anniversary", "Graduation", "New Year", "Custom"];
+const predefinedStyles = ["Formal", "Informal", "Funny", "Heartfelt", "Custom"];
+
 export default function App() {
-    const [recipient, setRecipient] = useState('');
-    const [occasion, setOccasion] = useState('');
-    const [style, setStyle] = useState('');
+    const [recipient, setRecipient] = useState(predefinedRecipients[0]);
+    const [customRecipient, setCustomRecipient] = useState('');
+    const [occasion, setOccasion] = useState(predefinedOccasions[0]);
+    const [customOccasion, setCustomOccasion] = useState('');
+    const [style, setStyle] = useState(predefinedStyles[0]);
+    const [customStyle, setCustomStyle] = useState('');
     const [greeting, setGreeting] = useState('');
 
     const generateGreeting = async () => {
+        const finalRecipient = recipient === "Custom" ? customRecipient : recipient;
+        const finalOccasion = occasion === "Custom" ? customOccasion : occasion;
+        const finalStyle = style === "Custom" ? customStyle : style;
+
         try {
             const response = await axios.post(API_URL, {
                 messages: [
                     { role: "system", content: "You are a helpful assistant. Please provide answers for given requests." },
-                    { role: "user", content: `Create a greeting for ${recipient} on the occasion of ${occasion} in ${style} style.` }
+                    { role: "user", content: `Create a greeting for ${finalRecipient} on the occasion of ${finalOccasion} in ${finalStyle} style.` }
                 ],
                 model: "gpt-4o"
             });
@@ -34,24 +43,48 @@ export default function App() {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Text style={styles.title}>Greeting Generator</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Recipient"
-                    value={recipient}
-                    onChangeText={setRecipient}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Occasion"
-                    value={occasion}
-                    onChangeText={setOccasion}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Style"
-                    value={style}
-                    onChangeText={setStyle}
-                />
+                <Text style={styles.label}>Select Recipient</Text>
+                <Picker selectedValue={recipient} style={styles.picker} onValueChange={(itemValue) => setRecipient(itemValue)}>
+                    {predefinedRecipients.map((item, index) => (
+                        <Picker.Item key={index} label={item} value={item} />
+                    ))}
+                </Picker>
+                {recipient === "Custom" && (
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Custom Recipient"
+                        value={customRecipient}
+                        onChangeText={setCustomRecipient}
+                    />
+                )}
+                <Text style={styles.label}>Select Occasion</Text>
+                <Picker selectedValue={occasion} style={styles.picker} onValueChange={(itemValue) => setOccasion(itemValue)}>
+                    {predefinedOccasions.map((item, index) => (
+                        <Picker.Item key={index} label={item} value={item} />
+                    ))}
+                </Picker>
+                {occasion === "Custom" && (
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Custom Occasion"
+                        value={customOccasion}
+                        onChangeText={setCustomOccasion}
+                    />
+                )}
+                <Text style={styles.label}>Select Style</Text>
+                <Picker selectedValue={style} style={styles.picker} onValueChange={(itemValue) => setStyle(itemValue)}>
+                    {predefinedStyles.map((item, index) => (
+                        <Picker.Item key={index} label={item} value={item} />
+                    ))}
+                </Picker>
+                {style === "Custom" && (
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Custom Style"
+                        value={customStyle}
+                        onChangeText={setCustomStyle}
+                    />
+                )}
                 <Button title="Generate Greeting" onPress={generateGreeting} />
                 {greeting ? (
                     <View style={styles.greetingBox}>
@@ -79,6 +112,15 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+    },
+    label: {
+        fontSize: 16,
+        marginTop: 10,
+    },
+    picker: {
+        width: '100%',
+        height: 50,
+        marginBottom: 10,
     },
     input: {
         width: '100%',
